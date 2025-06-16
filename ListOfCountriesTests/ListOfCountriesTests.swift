@@ -8,29 +8,141 @@
 import XCTest
 @testable import ListOfCountries
 
+@MainActor
 final class ListOfCountriesTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    var viewModel: CountriesViewModel!
+    
+    override func setUp() {
+        super.setUp()
+        viewModel = CountriesViewModel()
     }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    
+    override func tearDown() {
+        viewModel = nil
+        super.tearDown()
     }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+        
+    func testInitialState() {
+        XCTAssertTrue(viewModel.filteredCountries.isEmpty)
+        XCTAssertFalse(viewModel.isLoading)
+        XCTAssertNil(viewModel.error)
     }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    
+    func testLoadDataWithInvalidURL() async {
+        let expectation = XCTestExpectation(description: "Error callback called")
+        
+        viewModel.onError = { error in
+            XCTAssertNotNil(error)
+            XCTAssertEqual((error as NSError).domain, "CountriesViewModel")
+            expectation.fulfill()
         }
+        
+        await viewModel.loadData(from: "")
+        
+        await fulfillment(of: [expectation], timeout: 1.0)
+        XCTAssertNotNil(viewModel.error)
+        XCTAssertFalse(viewModel.isLoading)
     }
-
+    
+    
+    func testFilterCountriesWithEmptySearch() {
+        
+        setupMockCountries()
+        
+        viewModel.filterCountries(with: "")
+        
+        XCTAssertEqual(viewModel.filteredCountries.count, 3)
+    }
+    
+    func testFilterCountriesByName() {
+        setupMockCountries()
+        
+        viewModel.filterCountries(with: "USA")
+        
+        XCTAssertEqual(viewModel.filteredCountries.count, 1)
+        XCTAssertEqual(viewModel.filteredCountries.first?.name, "USA")
+    }
+    
+    func testFilterCountriesByCapital() {
+        setupMockCountries()
+        
+        viewModel.filterCountries(with: "London")
+        
+        XCTAssertEqual(viewModel.filteredCountries.count, 1)
+        XCTAssertEqual(viewModel.filteredCountries.first?.capital, "London")
+    }
+    
+    func testFilterCountriesCaseInsensitive() {
+        setupMockCountries()
+        
+        viewModel.filterCountries(with: "usa")
+        
+        XCTAssertEqual(viewModel.filteredCountries.count, 1)
+        XCTAssertEqual(viewModel.filteredCountries.first?.name, "USA")
+    }
+    
+    func testFilterCountriesNoMatch() {
+        setupMockCountries()
+        
+        viewModel.filterCountries(with: "NonExistentCountry")
+        
+        XCTAssertTrue(viewModel.filteredCountries.isEmpty)
+    }
+    
+    func testCountryAtValidIndex() {
+        setupMockCountries()
+        
+        let country = viewModel.country(at: 0)
+        
+        XCTAssertNotNil(country)
+        XCTAssertEqual(country?.name, "USA")
+    }
+    
+    func testCountryAtInvalidIndex() {
+        setupMockCountries()
+        
+        let country = viewModel.country(at: 10)
+        
+        XCTAssertNil(country)
+    }
+    
+    func testCountryAtNegativeIndex() {
+        setupMockCountries()
+        
+        let country = viewModel.country(at: -1)
+        
+        XCTAssertNil(country)
+    }
+    
+    func testOnUpdateCallback() {
+        let expectation = XCTestExpectation(description: "Update callback called")
+        
+        viewModel.onUpdate = {
+            expectation.fulfill()
+        }
+        
+        setupMockCountries()
+        viewModel.filterCountries(with: "USA")
+        
+        wait(for: [expectation], timeout: 1.0)
+    }
+    
+    private func setupMockCountries() {
+        
+        let mockCountries = [
+            Country(capital: "Washington", code: "US", flag: "🇺🇸", name: "USA", region: "Americas"),
+            Country(capital: "London", code: "GB", flag: "🇬🇧", name: "UK", region: "Europe"),
+            Country(capital: "Paris", code: "FR", flag: "🇫🇷", name: "France", region: "Europe")
+        ]
+        
+        viewModel._injectMockCountries(mockCountries)
+    }
 }
+
+#if DEBUG
+extension CountriesViewModel {
+    func _injectMockCountries(_ countries: [Country]) {
+        self.setTestCountries(countries)
+    }
+}
+#endif
