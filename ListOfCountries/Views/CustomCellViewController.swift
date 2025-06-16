@@ -14,8 +14,6 @@ class CustomCellViewController: UITableViewCell {
     let trailingTextLabel = UILabel()
     let containerView = UIView()
     
-    
-    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
@@ -25,7 +23,6 @@ class CustomCellViewController: UITableViewCell {
         super.init(coder: coder)
         setupUI()
     }
-    
     
     private func setupUI() {
         configureCellStyle()
@@ -100,10 +97,10 @@ class CustomCellViewController: UITableViewCell {
             trailingTextLabel.widthAnchor.constraint(lessThanOrEqualTo: containerView.widthAnchor, multiplier: 0.4)
         ])
     }
+    
     func configure(mainText: String, secondaryText: String, trailingText: String) {
         mainTextLabel.text = mainText
         secondaryTextLabel.text = secondaryText
         trailingTextLabel.text = trailingText
     }
-    
 }

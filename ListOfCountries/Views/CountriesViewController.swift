@@ -33,7 +33,7 @@ class CountriesViewController: UIViewController {
         searchController.searchBar.placeholder = "Search country..."
         
         navigationItem.searchController = searchController
-        navigationItem.hidesSearchBarWhenScrolling = false // Optional: keeps search bar always visible
+        navigationItem.hidesSearchBarWhenScrolling = false
         definesPresentationContext = true
     }
     
