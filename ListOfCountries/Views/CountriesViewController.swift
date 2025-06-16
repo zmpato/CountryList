@@ -11,6 +11,7 @@ class CountriesViewController: UIViewController {
     private let viewModel = CountriesViewModel()
     private let tableView = UITableView()
     private let searchController = UISearchController(searchResultsController: nil)
+    private let countryURL = "https://gist.githubusercontent.com/peymano-wmt/32dcb892b06648910ddd40406e37fdab/raw/db25946fd77c5873b0303b858e861ce724e0dcd0/countries.json"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,7 +24,7 @@ class CountriesViewController: UIViewController {
         bindViewModel()
 
         Task {
-            await viewModel.loadData(from: "https://gist.githubusercontent.com/peymano-wmt/32dcb892b06648910ddd40406e37fdab/raw/db25946fd77c5873b0303b858e861ce724e0dcd0/countries.json")
+            await viewModel.loadData(from: countryURL)
         }
     }
     
@@ -62,9 +63,6 @@ class CountriesViewController: UIViewController {
         viewModel.onUpdate = { [weak self] in
             self?.tableView.reloadData()}
     }
-    
-    
-    
 }
 
 extension CountriesViewController: UITableViewDataSource, UITableViewDelegate {
