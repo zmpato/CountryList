@@ -61,8 +61,24 @@ class CountriesViewModel {
     }
     
     @MainActor
-     func setTestCountries(_ countries: [Country]) {
+    func setTestCountries(_ countries: [Country]) {
         self.allCountries = countries
-        self.filterCountries(with: "") // To populate filteredCountries
+        self.filterCountries(with: "")
+    }
+    
+    @MainActor
+    func loadCountries() async {
+        guard let url = countriesURL else {
+            self.error = URLError(.badURL)
+            return
+        }
+        await loadData(from: url.absoluteString)
+    }
+    
+    private var countriesURL: URL? {
+        guard let countriesURL = Bundle.main.object(forInfoDictionaryKey: "CountriesURL") as? String else {
+            return nil
+        }
+        return URL(string: countriesURL)
     }
 }
